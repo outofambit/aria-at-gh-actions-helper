@@ -53,6 +53,8 @@ env:
   ARIA_AT_CALLBACK_URL: ${{ inputs.callback_url }}
   ARIA_AT_STATUS_URL: ${{ inputs.status_url }}
   ARIA_AT_CALLBACK_HEADER: ${{ inputs.callback_header || 'x-header-param:empty' }}
+  # Disable husky extra-installs for git hooks
+  HUSKY: 0
 
 jobs:
   nvda-chrome:
@@ -130,11 +132,11 @@ jobs:
           cd nvda-at-automation\Server
           go build main\main.go
 
-      - name: "aria-at: npm install"
+      - name: "aria-at: npm ci"
         shell: powershell
         run: |
           cd aria-at
-          npm install
+          npm ci
 
       - name: "aria-at: npm run build"
         shell: powershell
@@ -142,11 +144,11 @@ jobs:
           cd aria-at
           npm run build
 
-      - name: "automation-harness: npm install"
+      - name: "automation-harness: npm ci"
         shell: powershell
         run: |
           cd aria-at-automation-harness
-          npm install
+          npm ci
 
       - name: Log job state RUNNING
         shell: powershell
