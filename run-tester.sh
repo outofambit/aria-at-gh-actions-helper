@@ -5,7 +5,7 @@ set -euo pipefail
 # When run in macOS, the test harness does not use WebDriver because
 # SafariDriver's "glass pane" feature interferes with testing. Provide a valid
 # URL simply as a placeholder.
-url_placeholder=http://example.com
+url_placeholder=http://127.0.0.1:4444
 
 aria-at-automation-driver/package/bin/at-driver serve --port 3031 > at-driver.log 2>&1 &
 
