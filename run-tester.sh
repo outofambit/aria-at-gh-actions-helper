@@ -11,23 +11,26 @@ aria-at-automation-driver/package/bin/at-driver serve --port 3031 > at-driver.lo
 
 atdriver_pid=$!
 
-poll_url(url) {
-  local max_attempts=30
+poll_url() {
+  local url="$1"
   local attempt=0
+  echo "Polling ${url}"
 
-  while [ $attempt -lt $max_attempts ]; do
-    response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
-    if [ "$response" -ge 99 ]; then
-      Write-Output "${status} after ${attempts} tries"
-      return true
+  while [ ${attempt} -lt 30 ]; do
+    ((attempt++))
+
+    response=$(curl -s -o /dev/null -v -w "%{http_code}" -m 2 "$url" || true)
+
+    if [ ${response:--1} -ge 99 ]; then
+      echo "Success: ${response} after ${attempt} tries"
+      return 0
     else
-      echo "Attempt $((attempt+1))/$max_attempts: URL $url returned HTTP $response. Retrying in $timeout seconds..."
+      echo "Attempt ${attempt}: URL ${url} returned HTTP ${response}. Retrying in 1 second..."
       sleep 1
-      ((attempt++))
     fi
   done
 
-  echo "Error: Max attempts reached. URL $url is not responding with a success code."
+  echo "Error: Max attempts reached. ${url} is not responding."
   kill -9 ${atdriver_pid} || true
   exit 1
 }
@@ -37,14 +40,14 @@ case ${BROWSER} in
     echo "Starting chromedriver"
     chromedriver --port=4444 --log-level=INFO > webdriver.log 2>&1 &
     echo "Started chromedriver"
-    poll_url($url_placeholder)
+    poll_url http://localhost:4444
     ;;
 
   firefox)
     echo "Starting geckodriver"
     geckodriver > webdriver.log 2>&1 &
     echo "Started geckodriver"
-    poll_url($url_placeholder)
+    poll_url http://localhost:4444
     ;;
 
   safari)
