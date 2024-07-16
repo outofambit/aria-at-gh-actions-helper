@@ -11,17 +11,40 @@ aria-at-automation-driver/package/bin/at-driver serve --port 3031 > at-driver.lo
 
 atdriver_pid=$!
 
+poll_url(url) {
+  local max_attempts=30
+  local attempt=0
+
+  while [ $attempt -lt $max_attempts ]; do
+    response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+    if [ "$response" -ge 99 ]; then
+      Write-Output "${status} after ${attempts} tries"
+      return true
+    else
+      echo "Attempt $((attempt+1))/$max_attempts: URL $url returned HTTP $response. Retrying in $timeout seconds..."
+      sleep 1
+      ((attempt++))
+    fi
+  done
+
+  echo "Error: Max attempts reached. URL $url is not responding with a success code."
+  kill -9 ${atdriver_pid} || true
+  exit 1
+}
+
 case ${BROWSER} in
   chrome)
     echo "Starting chromedriver"
     chromedriver --port=4444 --log-level=INFO > webdriver.log 2>&1 &
     echo "Started chromedriver"
+    poll_url($url_placeholder)
     ;;
 
   firefox)
     echo "Starting geckodriver"
     geckodriver > webdriver.log 2>&1 &
     echo "Started geckodriver"
+    poll_url($url_placeholder)
     ;;
 
   safari)
