@@ -11,7 +11,29 @@ aria-at-automation-driver/package/bin/at-driver serve --port 3031 > at-driver.lo
 
 atdriver_pid=$!
 
+case ${BROWSER} in
+  chrome)
+    chromedriver --port=4444 --log-level=INFO > webdriver.log 2>&1 &
+    ;;
+
+  firefox)
+    geckodriver > webdriver.log 2>&1 &
+    ;;
+
+  safari)
+    ;;
+
+  *)
+    echo "Unknown browser (${BROWSER})"
+    kill -9 ${atdriver_pid} || true
+    exit 1
+    ;;
+esac
+
+webdriver_pid=$!
+
 function clean_up {
+  kill -9 ${webdriver_pid} || true
   kill -9 ${atdriver_pid} || true
 }
 trap clean_up EXIT
@@ -22,6 +44,6 @@ node aria-at-automation-harness/bin/host.js run-plan \
   --agent-web-driver-url=${url_placeholder} \
   --agent-at-driver-url=ws://127.0.0.1:3031/session \
   --reference-hostname=127.0.0.1 \
-  --agent-web-driver-browser=safari \
+  --agent-web-driver-browser=${BROWSER} \
   '{reference/**,test-*-voiceover_macos.*}' 2>&1 | \
     tee harness-run.log
