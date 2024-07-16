@@ -13,11 +13,15 @@ atdriver_pid=$!
 
 case ${BROWSER} in
   chrome)
+    echo "Starting chromedriver"
     chromedriver --port=4444 --log-level=INFO > webdriver.log 2>&1 &
+    echo "Started chromedriver"
     ;;
 
   firefox)
+    echo "Starting geckodriver"
     geckodriver > webdriver.log 2>&1 &
+    echo "Started geckodriver"
     ;;
 
   safari)
