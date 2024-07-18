@@ -86,6 +86,11 @@ jobs:
       - uses: browser-actions/setup-firefox@v1
         if: inputs.browser == 'firefox'
 
+      - uses: browser-actions/setup-geckodriver@latest
+        if: inputs.browser == 'firefox'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Environment
         uses: guidepup/setup-action@0.15.3
 
