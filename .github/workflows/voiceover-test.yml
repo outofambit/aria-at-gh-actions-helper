@@ -86,10 +86,11 @@ jobs:
       - uses: browser-actions/setup-firefox@v1
         if: inputs.browser == 'firefox'
 
-      - uses: outofambit/setup-geckodriver@8674e6e2e988c498dd9d68a4f6344c36801394e6
+      - name: Install geckodriver
         if: inputs.browser == 'firefox'
-        with:
+        env:
           token: ${{ secrets.GITHUB_TOKEN }}
+        run: sh ./install-geckodriver.sh
 
       - name: Setup Environment
         uses: guidepup/setup-action@0.15.3
