@@ -2,11 +2,12 @@
 
 set -euo pipefail
 
-sysArch="$(uname -om)"
+os="$(uname)"
+arch="$(uname -m)"
 apiToken="$token"
 apiURL="https://api.github.com/repos/mozilla/geckodriver/releases/latest"
 
-if [[ "$sysArch" == "Darwin arm64" ]]; then
+if [[ "$os" == "Darwin" ]]; then
 
   # Add Authorization header if a token is provided
   if [ -n "$token" ]; then
@@ -26,14 +27,37 @@ if [[ "$sysArch" == "Darwin arm64" ]]; then
 
   mkdir -p geckodriver
   cd geckodriver
-  wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos.tar.gz
-  tar xzf geckodriver-${latestVersion}-macos.tar.gz
+
+
+  case "$arch" in
+    "arm64")
+      echo "Downloading geckodriver"
+      wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos-aarch64.tar.gz
+
+      tar xzf geckodriver-${latestVersion}-macos-aarch64.tar.gz
+      ;;
+    "x86_64")
+    echo "Downloading geckodriver"
+      wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos.tar.gz
+      tar xzf geckodriver-${latestVersion}-macos.tar.gz
+      ;;
+    *)
+      echo "Unsupported architecture - $arch"
+      exit 1
+      ;;
+  esac
+
   chmod +x geckodriver
+  echo "Adding geckodriver to PATH"
   PATH="$(pwd):${PATH}"
+  cd ..
+  echo "Running geckodriver --version"
   geckodriver --version
+  echo "Running which geckodriver"
+  which geckodriver
   exit 0
 else
-  echo "Unsupported OS + architecture - ${sysArch}"
+  echo "Unsupported OS - ${os}"
   exit 1
 fi
 

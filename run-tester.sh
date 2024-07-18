@@ -45,6 +45,7 @@ case ${BROWSER} in
 
   firefox)
     echo "Starting geckodriver"
+    which geckodriver > which-webdriver.log 2>&1 &
     geckodriver > webdriver.log 2>&1 &
     echo "Started geckodriver"
     poll_url http://localhost:4444

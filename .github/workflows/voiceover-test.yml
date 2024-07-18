@@ -90,7 +90,7 @@ jobs:
         if: inputs.browser == 'firefox'
         env:
           token: ${{ secrets.GITHUB_TOKEN }}
-        run: sh ./install-geckodriver.sh
+        run: ./install-geckodriver.sh
 
       - name: Setup Environment
         uses: guidepup/setup-action@0.15.3
