@@ -86,7 +86,7 @@ jobs:
       - uses: browser-actions/setup-firefox@v1
         if: inputs.browser == 'firefox'
 
-      - uses: browser-actions/setup-geckodriver@latest
+      - uses: outofambit/setup-geckodriver@8674e6e2e988c498dd9d68a4f6344c36801394e6
         if: inputs.browser == 'firefox'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
