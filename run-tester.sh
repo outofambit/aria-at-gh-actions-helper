@@ -32,7 +32,7 @@ poll_url() {
   while [ ${attempt} -lt 30 ]; do
     ((attempt++))
 
-    response=$(curl -s -o /dev/null -v -w "%{http_code}" -m 2 "$url" || true)
+    response=$(curl -s -o /dev/null -w "%{http_code}" -m 2 "$url" || true)
 
     if [ ${response:--1} -ge 99 ]; then
       echo "Success: ${response} after ${attempt} tries"
