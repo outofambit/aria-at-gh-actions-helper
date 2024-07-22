@@ -4,26 +4,26 @@ set -euo pipefail
 
 os="$(uname)"
 arch="$(uname -m)"
-apiToken="$token"
-apiURL="https://api.github.com/repos/mozilla/geckodriver/releases/latest"
+api_token="$token"
+api_url="https://api.github.com/repos/mozilla/geckodriver/releases/latest"
 
 if [[ "$os" == "Darwin" ]]; then
 
   # Add Authorization header if a token is provided
-  if [ -n "$token" ]; then
-    authHeader="Authorization: token $apiToken"
+  if [ -n "$api_token" ]; then
+    auth_header="Authorization: token $api_token"
   else
-    authHeader=""
+    auth_header=""
   fi
   # Make the API request and extract the tag_name
-  latestVersion=$(curl -s -H "$authHeader" "$apiURL" | awk -F'"' '/tag_name/{print $4}')
+  latest_version=$(curl -s -H "$auth_header" "$api_url" | awk -F'"' '/tag_name/{print $4}')
 
-  if [ -z "$latestVersion" ]; then
+  if [ -z "$latest_version" ]; then
     echo "Failed to get latest version"
     exit 1
   fi
 
-  echo "Found latest version of geckodriver ${latestVersion}"
+  echo "Found latest version of geckodriver ${latest_version}"
 
   mkdir -p geckodriver
   (
@@ -32,14 +32,14 @@ if [[ "$os" == "Darwin" ]]; then
     case "$arch" in
       "arm64")
         echo "Downloading geckodriver"
-        wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos-aarch64.tar.gz
+        wget https://github.com/mozilla/geckodriver/releases/download/${latest_version}/geckodriver-${latest_version}-macos-aarch64.tar.gz
 
-        tar xzf geckodriver-${latestVersion}-macos-aarch64.tar.gz
+        tar xzf geckodriver-${latest_version}-macos-aarch64.tar.gz
         ;;
       "x86_64")
       echo "Downloading geckodriver"
-        wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos.tar.gz
-        tar xzf geckodriver-${latestVersion}-macos.tar.gz
+        wget https://github.com/mozilla/geckodriver/releases/download/${latest_version}/geckodriver-${latest_version}-macos.tar.gz
+        tar xzf geckodriver-${latest_version}-macos.tar.gz
         ;;
       *)
         echo "Unsupported architecture - $arch"
@@ -57,6 +57,3 @@ else
   echo "Unsupported OS - ${os}"
   exit 1
 fi
-
-
-
