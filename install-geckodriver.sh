@@ -6,7 +6,6 @@ os="$(uname)"
 arch="$(uname -m)"
 apiToken="$token"
 apiURL="https://api.github.com/repos/mozilla/geckodriver/releases/latest"
-existingPathDir="/usr/local/bin/"
 
 if [[ "$os" == "Darwin" ]]; then
 
@@ -27,33 +26,32 @@ if [[ "$os" == "Darwin" ]]; then
   echo "Found latest version of geckodriver ${latestVersion}"
 
   mkdir -p geckodriver
-  cd geckodriver
+  (
+    cd geckodriver
 
+    case "$arch" in
+      "arm64")
+        echo "Downloading geckodriver"
+        wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos-aarch64.tar.gz
 
-  case "$arch" in
-    "arm64")
+        tar xzf geckodriver-${latestVersion}-macos-aarch64.tar.gz
+        ;;
+      "x86_64")
       echo "Downloading geckodriver"
-      wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos-aarch64.tar.gz
+        wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos.tar.gz
+        tar xzf geckodriver-${latestVersion}-macos.tar.gz
+        ;;
+      *)
+        echo "Unsupported architecture - $arch"
+        exit 1
+        ;;
+    esac
 
-      tar xzf geckodriver-${latestVersion}-macos-aarch64.tar.gz
-      ;;
-    "x86_64")
-    echo "Downloading geckodriver"
-      wget https://github.com/mozilla/geckodriver/releases/download/${latestVersion}/geckodriver-${latestVersion}-macos.tar.gz
-      tar xzf geckodriver-${latestVersion}-macos.tar.gz
-      ;;
-    *)
-      echo "Unsupported architecture - $arch"
-      exit 1
-      ;;
-  esac
-
-  chmod +x geckodriver
-  mv geckodriver "$existingPathDir"
+    chmod +x geckodriver
+    echo "geckodriver available at ${PWD}"
+  )
   echo "Running geckodriver --version"
-  geckodriver --version
-  echo "Running which geckodriver"
-  which geckodriver
+  geckodriver/geckodriver --version
   exit 0
 else
   echo "Unsupported OS - ${os}"

@@ -58,7 +58,7 @@ case ${BROWSER} in
 
   firefox)
     echo "Starting geckodriver"
-    geckodriver > webdriver.log 2>&1 &
+    geckodriver/geckodriver > webdriver.log 2>&1 &
     webdriver_pid=$!
     echo "Started geckodriver"
     poll_url $webdriver_url
