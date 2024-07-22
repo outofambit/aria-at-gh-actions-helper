@@ -6,6 +6,7 @@ os="$(uname)"
 arch="$(uname -m)"
 apiToken="$token"
 apiURL="https://api.github.com/repos/mozilla/geckodriver/releases/latest"
+existingPathDir="/usr/local/bin/"
 
 if [[ "$os" == "Darwin" ]]; then
 
@@ -48,9 +49,7 @@ if [[ "$os" == "Darwin" ]]; then
   esac
 
   chmod +x geckodriver
-  echo "Adding geckodriver to PATH"
-  export PATH="$(pwd):${PATH}"
-  cd ..
+  mv geckodriver "$existingPathDir"
   echo "Running geckodriver --version"
   geckodriver --version
   echo "Running which geckodriver"
