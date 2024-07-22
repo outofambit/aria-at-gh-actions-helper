@@ -2,13 +2,26 @@
 
 set -euo pipefail
 
+# This URL is used for firefox and chrome, and is only a placeholder for safari.
 # When run in macOS, the test harness does not use WebDriver because
-# SafariDriver's "glass pane" feature interferes with testing. Provide a valid
-# URL simply as a placeholder.
-url_placeholder=http://127.0.0.1:4444
+# SafariDriver's "glass pane" feature interferes with testing.
+webdriver_url=http://127.0.0.1:4444
+
+# Initialize so we can set up trap right away
+webdriver_pid=0
+atdriver_pid=0
+
+function clean_up {
+  if [[ ${webdriver_pid} -ne 0 ]]; then
+    kill -9 ${webdriver_pid} || true
+  fi
+  if [[ ${atdriver_pid} -ne 0 ]]; then
+    kill -9 ${atdriver_pid} || true
+  fi
+}
+trap clean_up EXIT
 
 aria-at-automation-driver/package/bin/at-driver serve --port 3031 > at-driver.log 2>&1 &
-
 atdriver_pid=$!
 
 poll_url() {
@@ -31,7 +44,6 @@ poll_url() {
   done
 
   echo "Error: Max attempts reached. ${url} is not responding."
-  kill -9 ${atdriver_pid} || true
   exit 1
 }
 
@@ -39,17 +51,17 @@ case ${BROWSER} in
   chrome)
     echo "Starting chromedriver"
     chromedriver --port=4444 --log-level=INFO > webdriver.log 2>&1 &
+    webdriver_pid=$!
     echo "Started chromedriver"
-    poll_url http://localhost:4444
+    poll_url $webdriver_url
     ;;
 
   firefox)
     echo "Starting geckodriver"
-    which geckodriver > which-webdriver.log 2>&1 &
     geckodriver > webdriver.log 2>&1 &
-    echo "exit code: $?"
+    webdriver_pid=$!
     echo "Started geckodriver"
-    poll_url http://localhost:4444
+    poll_url $webdriver_url
     ;;
 
   safari)
@@ -57,23 +69,14 @@ case ${BROWSER} in
 
   *)
     echo "Unknown browser (${BROWSER})"
-    kill -9 ${atdriver_pid} || true
     exit 1
     ;;
 esac
 
-webdriver_pid=$!
-
-function clean_up {
-  kill -9 ${webdriver_pid} || true
-  kill -9 ${atdriver_pid} || true
-}
-trap clean_up EXIT
-
 node aria-at-automation-harness/bin/host.js run-plan \
   --plan-workingdir aria-at/build/${ARIA_AT_WORK_DIR} \
   --debug \
-  --agent-web-driver-url=${url_placeholder} \
+  --agent-web-driver-url=${webdriver_url} \
   --agent-at-driver-url=ws://127.0.0.1:3031/session \
   --reference-hostname=127.0.0.1 \
   --agent-web-driver-browser=${BROWSER} \
