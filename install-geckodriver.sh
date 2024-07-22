@@ -49,7 +49,7 @@ if [[ "$os" == "Darwin" ]]; then
 
   chmod +x geckodriver
   echo "Adding geckodriver to PATH"
-  PATH="$(pwd):${PATH}"
+  export PATH="$(pwd):${PATH}"
   cd ..
   echo "Running geckodriver --version"
   geckodriver --version
