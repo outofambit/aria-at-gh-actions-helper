@@ -159,8 +159,6 @@ jobs:
 
       - name: Run harness
         run: ./run-tester.sh
-        env:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log job state ERROR
         if: failure() && inputs.status_url
