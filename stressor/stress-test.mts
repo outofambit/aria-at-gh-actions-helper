@@ -187,6 +187,61 @@ async function dispatchWorkflowForTestCombo(
 }
 
 /**
+ * Find the most common set of screenreader responses for each test in this set of runs
+ * In other words, it finds the most for results of the same testCsv number
+ * within this collection of run results.
+ *
+ * @returns a synthetic results array where each element is the mode for its csvRow
+ */
+function findMostCommonRunResults(
+  results: ReadonlyArray<WorkflowRunResults>
+): WorkflowRunResults {
+  // Group responses by testCsvRow
+  const groupedResponses: Map<number, Array<Array<string>>> = new Map();
+
+  results.forEach((workflowResult) => {
+    workflowResult.forEach((row) => {
+      if (!groupedResponses.has(row.testCsvRow)) {
+        groupedResponses.set(row.testCsvRow, []);
+      }
+      groupedResponses.get(row.testCsvRow)!.push(row.screenreaderResponses);
+    });
+  });
+
+  // Find mode for each testCsvRow
+  const modeResponses: WorkflowRunResults = Array.from(
+    groupedResponses.entries()
+  ).map(([testCsvRow, responses]) => {
+    const mode = findMode(responses);
+    return {
+      testCsvRow,
+      screenreaderResponses: mode,
+    };
+  });
+
+  return modeResponses;
+}
+
+function findMode(arr: Array<Array<string>>): Array<string> {
+  const counts = new Map<string, number>();
+  let maxCount = 0;
+  let mode: Array<string> = [];
+
+  arr.forEach((item) => {
+    const key = JSON.stringify(item);
+    const count = (counts.get(key) || 0) + 1;
+    counts.set(key, count);
+
+    if (count > maxCount) {
+      maxCount = count;
+      mode = item;
+    }
+  });
+
+  return mode;
+}
+
+/**
  * Checks the results in a set of workflow runs for population and equality
  * @returns An object with percentages of populated and equal results
  */
@@ -195,50 +250,45 @@ function checkRunSetResults(results: Array<WorkflowRunResults>) {
   let populatedRows = 0;
   let equalRows = 0;
 
+  const comparisonWorkflowRunResults = findMostCommonRunResults(results);
   results.forEach((workflowResults, workflowIndex) => {
     totalRows += workflowResults.length;
 
     workflowResults.forEach((row, rowIndex) => {
       // Check for populated responses
-      const isRowPopulated = row.screenreaderResponses.every(
-        (s: string) => s !== null && s.trim().length !== 0
-      );
-      if (isRowPopulated) {
-        populatedRows++;
+      // const isRowPopulated = row.screenreaderResponses.every(
+      //   (s: string) => s !== null && s.trim().length !== 0
+      // );
+      // if (isRowPopulated) {
+      //   populatedRows++;
+      // } else {
+      //   console.error(
+      //     `Test CSV row ${row.testCsvRow} has a blank response from screenreader`
+      //   );
+      //   console.error(row.screenreaderResponses);
+      // }
+
+      const comparisonResponses = comparisonWorkflowRunResults.find(
+        (r) => r.testCsvRow === row.testCsvRow
+      )!.screenreaderResponses;
+
+      // Check for equal responses against the most common set
+      const isRowEqual =
+        JSON.stringify(row.screenreaderResponses) ===
+        JSON.stringify(comparisonResponses);
+      if (isRowEqual) {
+        equalRows++;
       } else {
         console.error(
-          `Test CSV row ${row.testCsvRow} has a blank response from screenreader`
+          `Run #${workflowIndex} of Test CSV row ${row.testCsvRow} has screenreader responses different from the most common set`
         );
-        console.error(row.screenreaderResponses);
-      }
-
-      // Check for equal responses (skip first workflow as it's the reference)
-      if (workflowIndex > 0) {
-        const isRowEqual = row.screenreaderResponses.every(
-          (a: string, j: number) =>
-            a === results[0][rowIndex].screenreaderResponses[j]
-        );
-        if (isRowEqual) {
-          equalRows++;
-        } else {
-          console.error(
-            `Run #${workflowIndex} of Test CSV row ${row.testCsvRow} has screenreader responses different from Run 0`
-          );
-          console.error(
-            diff(
-              row.screenreaderResponses,
-              results[0][rowIndex].screenreaderResponses
-            )
-          );
-        }
+        console.error(diff(comparisonResponses, row.screenreaderResponses));
       }
     });
   });
 
-  const totalRowsExcludingFirst = totalRows - results[0].length;
   const percentPopulated = ((totalRows - populatedRows) / totalRows) * 100;
-  const percentEqual =
-    ((totalRowsExcludingFirst - equalRows) / totalRowsExcludingFirst) * 100;
+  const percentEqual = ((totalRows - equalRows) / totalRows) * 100;
 
   console.log(
     `Percentage of rows with unpopulated responses: ${percentPopulated.toFixed(
@@ -247,8 +297,8 @@ function checkRunSetResults(results: Array<WorkflowRunResults>) {
   );
   console.log(
     `Percentage of rows with unequal responses: ${percentEqual.toFixed(2)}%, (${
-      totalRowsExcludingFirst - equalRows
-    } of ${totalRowsExcludingFirst})`
+      totalRows - equalRows
+    } of ${totalRows})`
   );
 
   return {
