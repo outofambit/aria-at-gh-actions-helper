@@ -78,9 +78,9 @@ node aria-at-automation-harness/bin/host.js run-plan \
   --time-after-keys 25000 \
   --plan-workingdir aria-at/build/${ARIA_AT_WORK_DIR} \
   --debug \
-  --agent-web-driver-url=${webdriver_url} \
-  --agent-at-driver-url=ws://127.0.0.1:3031/session \
+  --web-driver-url=${webdriver_url} \
+  --at-driver-url=ws://127.0.0.1:3031/session \
   --reference-hostname=127.0.0.1 \
-  --agent-web-driver-browser=${BROWSER} \
+  --web-driver-browser=${BROWSER} \
   '{reference/**,test-*-voiceover_macos.*}' 2>&1 | \
     tee harness-run.log
