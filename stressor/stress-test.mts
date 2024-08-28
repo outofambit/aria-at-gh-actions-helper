@@ -6,16 +6,16 @@ import { diff } from "jest-diff";
 const DEBUG = process.env.DEBUG === "true" || process.env.DEBUG === "1";
 
 const testPlans = [
-  "tests/menu-button-actions-active-descendant",
+  // "tests/menu-button-actions-active-descendant",
   // "tests/alert",
-  // "tests/horizontal-slider",
+  "tests/horizontal-slider",
   // "tests/command-button",
   // "tests/disclosure-navigation",
   // "tests/link-span-text",
-  // "tests/dialog",
+  // "tests/modal-dialog",
   // "tests/menu-button-navigation",
   // "tests/radiogroup-aria-activedescendant",
-  // "tests/toggle-button/toggle-button-navigation",
+  // "tests/toggle-button",
 ];
 const owner = "bocoup",
   repo = "aria-at-gh-actions-helper";
