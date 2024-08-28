@@ -253,6 +253,7 @@ function checkRunSetResults(results: Array<WorkflowRunResults>) {
   let equalRows = 0;
 
   const comparisonWorkflowRunResults = findMostCommonRunResults(results);
+
   results.forEach((workflowResults, workflowIndex) => {
     totalRows += workflowResults.length;
 
