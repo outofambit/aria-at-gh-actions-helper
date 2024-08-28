@@ -32,7 +32,7 @@ const testingMatrix = [
 ];
 const port = 8888;
 const workflowHeaderKey = "x-workflow-key";
-const numRuns = 2;
+const numRuns = 6;
 
 interface WorkflowCallbackPayload {
   status: string;
