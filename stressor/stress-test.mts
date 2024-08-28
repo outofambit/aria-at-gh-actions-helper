@@ -36,7 +36,8 @@ const numRuns = 6;
 
 interface WorkflowCallbackPayload {
   status: string;
-  testCsvRow: number;
+  testCsvRow?: number;
+  presentationNumber?: number;
   responses?: Array<string>;
 }
 
@@ -128,7 +129,8 @@ async function setUpTestComboCallbackListener(
             if (parsedBody.responses !== undefined) {
               results.push({
                 screenreaderResponses: parsedBody.responses,
-                testCsvRow: parsedBody.testCsvRow,
+                testCsvRow:
+                  parsedBody.testCsvRow ?? parsedBody.presentationNumber ?? -1,
               });
             } else {
               debugLog(
