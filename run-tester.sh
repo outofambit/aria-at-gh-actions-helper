@@ -74,8 +74,8 @@ case ${BROWSER} in
 esac
 
 node aria-at-automation-harness/bin/host.js run-plan \
-  --time-after-nav 25000 \
-  --time-after-keys 25000 \
+  --time-after-nav 5000 \
+  --time-after-keys 5000 \
   --plan-workingdir aria-at/build/${ARIA_AT_WORK_DIR} \
   --debug \
   --web-driver-url=${webdriver_url} \
