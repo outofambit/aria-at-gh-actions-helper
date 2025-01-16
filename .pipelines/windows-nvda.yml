@@ -97,7 +97,7 @@ steps:
     inputs:
       targetType: "inline"
       workingDirectory: $(helper_dir)/aria-at
-      script: git checkout $(aria_at_ref)
+      script: git checkout ${env:aria_at_ref}
   - checkout: nvda-at-automation
     path: helper/nvda-at-automation
     displayName: Checkout nvda-at-automation
