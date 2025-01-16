@@ -43,33 +43,17 @@ steps:
       script: |
         Write-Host "Making inputs available as environment variables expected by scripts."
         Write-Host "##vso[task.setvariable variable=ARIA_AT_WORK_DIR;]${env:work_dir}"
-        Write-Host "ARIA_AT_WORK_DIR: ${env:ARIA_AT_WORK_DIR} (${env:work_dir})"
         Write-Host "##vso[task.setvariable variable=ARIA_AT_TEST_PATTERN;]${env:test_pattern}"
-        Write-Host "ARIA_AT_TEST_PATTERN: ${env:ARIA_AT_TEST_PATTERN} (${env:test_pattern})"
         Write-Host "##vso[task.setvariable variable=ARIA_AT_CALLBACK_URL;]${env:callback_url}"
-        Write-Host "ARIA_AT_CALLBACK_URL: ${env:ARIA_AT_CALLBACK_URL} (${env:callback_url})"
         Write-Host "##vso[task.setvariable variable=ARIA_AT_STATUS_URL;]${env:status_url}"
-        Write-Host "ARIA_AT_STATUS_URL: ${env:ARIA_AT_STATUS_URL} (${env:status_url})"
         Write-Host "##vso[task.setvariable variable=ARIA_AT_CALLBACK_HEADER;]${env:callback_header}"
-        Write-Host "ARIA_AT_CALLBACK_HEADER: ${env:ARIA_AT_CALLBACK_HEADER} (${env:callback_header})"
         Write-Host "##vso[task.setvariable variable=BROWSER;]${env:browser}"
-        Write-Host "BROWSER: ${env:BROWSER} (${env:browser})"
         Write-Host "##vso[task.setvariable variable=NVDA_VERSION;]${env:nvda_version}"
-        Write-Host "NVDA_VERSION: ${env:NVDA_VERSION} (${env:nvda_version})"
 
   - task: UseNode@1
     displayName: Install Node
     inputs:
       version: "20.x"
-  - task: PowerShell@2
-    displayName: Debug Parameters
-    inputs:
-      targetType: inline
-      script: |
-        Write-Host "status_url variable value: ${env:status_url}"
-        Write-Host "STATUS_URL variable value: ${env:STATUS_URL}"
-        Write-Host "ARIA_AT_STATUS_URL variable value: ${env:ARIA_AT_STATUS_URL}"
-        Write-Host "Pipeline status: $(Agent.JobStatus)"
   - task: PowerShell@2
     displayName: Log job state QUEUED
     condition: ne(variables.STATUS_URL, '')
@@ -159,7 +143,6 @@ steps:
       command: "install"
   - task: PowerShell@2
     displayName: Log job state RUNNING
-    # weird syntaxing because parameters only exists in ${{ }} land, but succeeded() doesn't exist there
     condition: and(succeeded(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
@@ -179,7 +162,6 @@ steps:
 
   - task: PowerShell@2
     displayName: Log job state ERROR
-    # weird syntaxing because parameters only exists in ${{ }} land, but failed() doesn't exist there
     condition: and(failed(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
@@ -190,7 +172,6 @@ steps:
         Invoke-WebRequest $env:ARIA_AT_STATUS_URL -Headers $headers -Method 'POST' -Body $body
   - task: PowerShell@2
     displayName: Log job state COMPLETED
-    # weird syntaxing because parameters only exists in ${{ }} land, but succeeded() doesn't exist there
     condition: and(succeeded(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
