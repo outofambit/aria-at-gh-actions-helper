@@ -6,8 +6,6 @@ pool:
   vmImage: windows-latest
 
 variables:
-  - name: empty
-    value: ""
   - name: helper_dir
     value: '$(Agent.BuildDirectory)\helper'
 
