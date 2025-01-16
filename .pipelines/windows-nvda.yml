@@ -23,9 +23,9 @@ variables:
   - name: work_dir
     value: "tests/alert"
   - name: callback_header
-    value: $(empty)
+    value: ""
   - name: status_url
-    value: NONE
+    value: ""
 
 resources:
   repositories:
@@ -81,20 +81,14 @@ steps:
       version: "20.x"
   - task: PowerShell@2
     displayName: Debug Parameters
-    env:
-      p_status_url: ${{ parameters['status_url'] }}
-      v_status_url: ${{ variables['status_url'] }}
     inputs:
       targetType: inline
       script: |
-        Write-Host "status_url parameter value: ${{ parameters['status_url'] }}"
         Write-Host "status_url variable value: $env:status_url"
         Write-Host "Pipeline status: $(Agent.JobStatus)"
-        Write-Host "p_status_url: $env:p_status_url"
-        Write-Host "v_status_url: $env:v_status_url"
   - task: PowerShell@2
     displayName: Log job state QUEUED
-    condition: ${{ ne(variables['status_url'], '') }}
+    condition: ne(variables.status_url, '')
     inputs:
       targetType: inline
       script: |
@@ -115,23 +109,23 @@ steps:
     path: helper/aria-at
     displayName: Checkout aria-at
   - task: PowerShell@2
-    displayName: Checkout aria-at to ${{ parameters['aria_at_ref'] }}
+    displayName: Checkout aria-at to $(aria_at_ref)
     inputs:
       targetType: "inline"
       workingDirectory: $(helper_dir)/aria-at
-      script: git checkout ${{ parameters['aria_at_ref'] }}
+      script: git checkout $(aria_at_ref)
   - checkout: nvda-at-automation
     path: helper/nvda-at-automation
     displayName: Checkout nvda-at-automation
   - task: DownloadGitHubRelease@0
-    displayName: Download nvda portable ${{ parameters['nvda_version'] }}
+    displayName: Download nvda portable $(nvda_version)
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/download-github-release-v0?view=azure-pipelines
     inputs:
       connection: MyGitHubServiceConnection
       userRepository: bocoup/aria-at-automation-nvda-builds
-      ${{ if ne(parameters['nvda_version'], 'latest')}}:
+      ${{ if ne(variables.nvda_version, 'latest') }}:
         defaultVersionType: specificTag
-        version: ${{ parameters['nvda_version'] }}
+        version: $(nvda_version)
       downloadPath: $(helper_dir)/nvda-portable
   - task: PowerShell@2
     displayName: Setup NVDA_PORTABLE_ZIP
@@ -182,7 +176,7 @@ steps:
   - task: PowerShell@2
     displayName: Log job state RUNNING
     # weird syntaxing because parameters only exists in ${{ }} land, but succeeded() doesn't exist there
-    condition: and(succeeded(), ${{ ne(parameters['status_url'], 'NONE') }} )
+    condition: and(succeeded(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
       script: |
@@ -202,7 +196,7 @@ steps:
   - task: PowerShell@2
     displayName: Log job state ERROR
     # weird syntaxing because parameters only exists in ${{ }} land, but failed() doesn't exist there
-    condition: and(failed(), ${{ ne(parameters['status_url'], 'NONE') }} )
+    condition: and(failed(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
       script: |
@@ -213,7 +207,7 @@ steps:
   - task: PowerShell@2
     displayName: Log job state COMPLETED
     # weird syntaxing because parameters only exists in ${{ }} land, but succeeded() doesn't exist there
-    condition: and(succeeded(), ${{ ne(parameters['status_url'], 'NONE') }} )
+    condition: and(succeeded(), ne(variables.status_url, ''))
     inputs:
       targetType: inline
       script: |
