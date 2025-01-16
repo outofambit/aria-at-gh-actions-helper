@@ -12,39 +12,20 @@ variables:
     value: '$(Agent.BuildDirectory)\helper'
   - name: callback_url
     value: ""
-
-parameters:
   - name: aria_at_ref
-    type: string
-    default: master
-    displayName: ARIA-AT Reference Branch
+    value: master
   - name: browser
-    type: string
-    default: chrome
-    displayName: Browser to Test
-    values:
-      - chrome
-      - firefox
+    value: chrome
   - name: nvda_version
-    type: string
-    default: "latest"
-    displayName: NVDA Version
+    value: "latest"
   - name: test_pattern
-    type: string
-    default: "{reference/**,test-*-nvda.*}"
-    displayName: Test Pattern
+    value: "{reference/**,test-*-nvda.*}"
   - name: work_dir
-    type: string
-    default: "tests/alert"
-    displayName: Working Directory
+    value: "tests/alert"
   - name: callback_header
-    type: string
-    default: $(empty)
-    displayName: Callback Header
+    value: $(empty)
   - name: status_url
-    type: string
-    default: NONE
-    displayName: Status URL
+    value: NONE
 
 resources:
   repositories:
@@ -75,31 +56,24 @@ steps:
   # Method borrowed from https://stackoverflow.com/a/63959970
   - task: PowerShell@2
     displayName: Setup env vars
-    env:
-      p_work_dir: ${{ parameters['work_dir'] }}
-      p_test_pattern: ${{ parameters['test_pattern'] }}
-      p_status_url: ${{ parameters['status_url'] }}
-      p_callback_header: ${{ parameters['callback_header'] }}
-      p_browser: ${{ parameters['browser'] }}
-      p_nvda_version: ${{ parameters['nvda_version'] }}
     inputs:
       targetType: inline
       script: |
-        Write-Host "Making inputs available as an environment variable."
-        Write-Host "##vso[task.setvariable variable=ARIA_AT_WORK_DIR;]$env:p_work_dir"
-        Write-Host "ARIA_AT_WORK_DIR: $env:ARIA_AT_WORK_DIR ($env:p_work_dir)"
-        Write-Host "##vso[task.setvariable variable=ARIA_AT_TEST_PATTERN;]$env:p_test_pattern"
-        Write-Host "ARIA_AT_TEST_PATTERN: $env:ARIA_AT_TEST_PATTERN ($env:p_test_pattern)"
-        Write-Host "##vso[task.setvariable variable=ARIA_AT_STATUS_URL;]${{ parameters['status_url'] }}"
-        Write-Host "ARIA_AT_STATUS_URL: $env:ARIA_AT_STATUS_URL (${{ parameters['status_url'] }})"
-        Write-Host "##vso[task.setvariable variable=ARIA_AT_STATUS_URL;]$env:p_status_url"
-        Write-Host "ARIA_AT_STATUS_URL: $env:ARIA_AT_STATUS_URL ($env:p_status_url)"
-        Write-Host "##vso[task.setvariable variable=ARIA_AT_CALLBACK_HEADER;]$env:p_callback_header"
-        Write-Host "ARIA_AT_CALLBACK_HEADER: $env:ARIA_AT_CALLBACK_HEADER ($env:p_callback_header)"
-        Write-Host "##vso[task.setvariable variable=BROWSER;]$env:p_browser"
-        Write-Host "BROWSER: $env:BROWSER ($env:p_browser)"
-        Write-Host "##vso[task.setvariable variable=NVDA_VERSION;]$env:p_nvda_version"
-        Write-Host "NVDA_VERSION: $env:NVDA_VERSION ($env:p_nvda_version)"
+        Write-Host "Making inputs available as environment variables expected by scripts."
+        Write-Host "##vso[task.setvariable variable=ARIA_AT_WORK_DIR;]$(work_dir)"
+        Write-Host "ARIA_AT_WORK_DIR: $env:ARIA_AT_WORK_DIR ($(work_dir))"
+        Write-Host "##vso[task.setvariable variable=ARIA_AT_TEST_PATTERN;]$(test_pattern)"
+        Write-Host "ARIA_AT_TEST_PATTERN: $env:ARIA_AT_TEST_PATTERN ($(test_pattern))"
+        Write-Host "##vso[task.setvariable variable=ARIA_AT_CALLBACK_URL;]$(callback_url)"
+        Write-Host "ARIA_AT_CALLBACK_URL: $env:ARIA_AT_CALLBACK_URL ($(callback_url))"
+        Write-Host "##vso[task.setvariable variable=ARIA_AT_STATUS_URL;]$(status_url)"
+        Write-Host "ARIA_AT_STATUS_URL: $env:ARIA_AT_STATUS_URL ($(status_url))"
+        Write-Host "##vso[task.setvariable variable=ARIA_AT_CALLBACK_HEADER;]$(callback_header)"
+        Write-Host "ARIA_AT_CALLBACK_HEADER: $env:ARIA_AT_CALLBACK_HEADER ($(callback_header))"
+        Write-Host "##vso[task.setvariable variable=BROWSER;]$(browser)"
+        Write-Host "BROWSER: $env:BROWSER ($(browser))"
+        Write-Host "##vso[task.setvariable variable=NVDA_VERSION;]$(nvda_version)"
+        Write-Host "NVDA_VERSION: $env:NVDA_VERSION ($(nvda_version))"
 
   - task: UseNode@1
     displayName: Install Node
