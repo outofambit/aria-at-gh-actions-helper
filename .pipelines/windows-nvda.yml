@@ -10,22 +10,6 @@ variables:
     value: ""
   - name: helper_dir
     value: '$(Agent.BuildDirectory)\helper'
-  - name: callback_url
-    value: ""
-  - name: aria_at_ref
-    value: master
-  - name: browser
-    value: chrome
-  - name: nvda_version
-    value: "latest"
-  - name: test_pattern
-    value: "{reference/**,test-*-nvda.*}"
-  - name: work_dir
-    value: "tests/alert"
-  - name: callback_header
-    value: ""
-  - name: status_url
-    value: ""
 
 resources:
   repositories:
