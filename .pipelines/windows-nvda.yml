@@ -56,7 +56,7 @@ steps:
       version: "20.x"
   - task: PowerShell@2
     displayName: Log job state QUEUED
-    condition: ne(variables.STATUS_URL, '')
+    condition: ne(variables.status_url, '')
     inputs:
       targetType: inline
       script: |
@@ -86,14 +86,22 @@ steps:
     path: helper/nvda-at-automation
     displayName: Checkout nvda-at-automation
   - task: DownloadGitHubRelease@0
+    condition: eq(variables.nvda_version, 'latest')
+    displayName: Download latest nvda portable
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/download-github-release-v0?view=azure-pipelines
+    inputs:
+      connection: MyGitHubServiceConnection
+      userRepository: bocoup/aria-at-automation-nvda-builds
+      downloadPath: $(helper_dir)/nvda-portable
+  - task: DownloadGitHubRelease@0
+    condition: ne(variables.nvda_version, 'latest')
     displayName: Download nvda portable $(nvda_version)
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/download-github-release-v0?view=azure-pipelines
     inputs:
       connection: MyGitHubServiceConnection
       userRepository: bocoup/aria-at-automation-nvda-builds
-      ${{ if ne(variables.nvda_version, 'latest') }}:
-        defaultVersionType: specificTag
-        version: $(nvda_version)
+      defaultVersionType: specificTag
+      version: $(nvda_version)
       downloadPath: $(helper_dir)/nvda-portable
   - task: PowerShell@2
     displayName: Setup NVDA_PORTABLE_ZIP
