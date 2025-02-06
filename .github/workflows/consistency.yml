@@ -68,7 +68,7 @@ jobs:
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           workflow_file_name: "${{ matrix.workflow }}"
           wait_interval: 30
           propagate_failure: false
@@ -108,7 +108,7 @@ jobs:
       - name: Download artifacts from matching runs
         uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT_TOKEN }}
           run-id: ${{ fromJSON(steps.get-run-ids.outputs.result) }}
           pattern: "*"
           path: artifacts-dir
