@@ -1,0 +1,113 @@
+name: Consistency Test
+on:
+  workflow_dispatch:
+    inputs:
+      aria_at_ref:
+        description: |
+          The sha / ref to checkout for aria-at tests
+        required: false
+        type: string
+      nvda_version:
+        description: |
+          The version of NVDA to use for testing
+        required: false
+        type: string
+        default: "latest"
+      macos_version:
+        description: macOS version to run the tests on
+        required: false
+        type: choice
+        options:
+          - "13"
+          - "14"
+        default: "14"
+
+jobs:
+  define-matrix:
+    name: Define Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      browsers: ${{ steps.browsers.outputs.browsers }}
+      range: ${{ steps.range.outputs.range }}
+      testPlans: ${{ steps.testPlans.outputs.testPlans }}
+      workflows: ${{ steps.workflows.outputs.workflows }}
+    steps:
+      - name: Define Range
+        id: range
+        run: |
+          echo 'range=($(seq 1 2))' >> "$GITHUB_OUTPUT"
+      - name: Define Browsers
+        id: browsers
+        run: |
+          echo 'browsers=["chrome", "firefox", "safari"]' >> "$GITHUB_OUTPUT"
+      - name: Define TestPlans
+        id: testPlans
+        run: |
+          echo 'testPlans=["tests/alert", "tests/modal-dialog"]' >> "$GITHUB_OUTPUT"
+      - name: Define Workflows
+        id: workflows
+        run: |
+          echo 'workflows=["voiceover-test.yml", "windows-nvda.yml"]' >> "$GITHUB_OUTPUT"
+
+  run-tests:
+    needs: define-matrix
+    name: Run Test Matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workflow: ${{ fromJSON(needs.define-matrix.outputs.workflows) }}
+        browser: ${{ fromJSON(needs.define-matrix.outputs.browsers) }}
+        testPlan: ${{ fromJSON(needs.define-matrix.outputs.testPlans) }}
+        range: ${{ fromJSON(needs.define-matrix.outputs.range) }}
+        exclude:
+          - browsers: "safari"
+            workflow: "windows-nvda.yml"
+    steps:
+      - name: Trigger and wait for workflows
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_file_name: "${{ matrix.workflow }}"
+          wait_interval: 30
+          propagate_failure: false
+          client_payload: |
+            {
+              "aria_at_ref": "${{ inputs.aria_at_ref }}",
+              "work_dir": "${{ matrix.testPlan }}",
+              "browser": "${{ matrix.browser }}",
+              "callback_header": "consistency-test-${{ github.run_id }}"
+            }
+  compile-results:
+    needs:
+      - define-matrix
+      - run-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        id: get-run-ids
+        with:
+          script: |
+            const callbackHeader = `consistency-test-${context.runId}`;
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'workflow.yml',
+              event: 'workflow_dispatch'
+            });
+
+            const matchingRuns = runs.data.workflow_runs
+              .filter(run => run.inputs?.callback_header === callbackHeader)
+              .map(run => run.id);
+
+            return matchingRuns;
+
+      - name: Download artifacts from matching runs
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ fromJSON(steps.get-run-ids.outputs.result) }}
+          pattern: "*"
+          path: artifacts-dir
+      - run: ls
