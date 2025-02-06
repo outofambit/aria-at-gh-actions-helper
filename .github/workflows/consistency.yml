@@ -35,7 +35,7 @@ jobs:
       - name: Define Range
         id: range
         run: |
-          echo 'range=($(seq 1 2))' >> "$GITHUB_OUTPUT"
+          echo 'range=[1,2]' >> "$GITHUB_OUTPUT"
       - name: Define Browsers
         id: browsers
         run: |
