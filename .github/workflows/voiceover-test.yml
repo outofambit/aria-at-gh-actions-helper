@@ -39,7 +39,6 @@ on:
         options:
           - "13"
           - "14"
-          - "15"
         default: "14"
       browser:
         description: |
