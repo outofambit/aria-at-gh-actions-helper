@@ -60,7 +60,7 @@ jobs:
         testPlan: ${{ fromJSON(needs.define-matrix.outputs.testPlans) }}
         range: ${{ fromJSON(needs.define-matrix.outputs.range) }}
         exclude:
-          - browsers: "safari"
+          - browser: "safari"
             workflow: "windows-nvda.yml"
     steps:
       - name: Trigger and wait for workflows
@@ -77,7 +77,9 @@ jobs:
               "aria_at_ref": "${{ inputs.aria_at_ref }}",
               "work_dir": "${{ matrix.testPlan }}",
               "browser": "${{ matrix.browser }}",
-              "callback_header": "consistency-test-${{ github.run_id }}"
+              "callback_header": "consistency-test-${{ github.run_id }}",
+              "nvda_version": "${{ inputs.nvda_version }}",
+              "macos_version": "${{ inputs.macos_version }}"
             }
   compile-results:
     needs:
@@ -93,7 +95,7 @@ jobs:
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: 'workflow.yml',
+              workflow_id: ['voiceover-test.yml', 'windows-nvda.yml'],
               event: 'workflow_dispatch'
             });
 
