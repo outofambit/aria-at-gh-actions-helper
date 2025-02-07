@@ -69,8 +69,6 @@ jobs:
           workflow: ${{ matrix.workflow }}
           token: ${{ secrets.PAT_TOKEN }}
           wait-for-completion: true
-          wait-for-completion-timeout: 3600 # 1 hour timeout
-          wait-for-completion-interval: 30 # check every 30 seconds
           inputs: |
             {
               "aria_at_ref": "${{ inputs.aria_at_ref }}",
