@@ -104,7 +104,10 @@ jobs:
                 r.inputs?.callback_header === `consistency-test:${context.runId}-${{ matrix.range }}`
               );
 
-              console.log('Workflow not found yet')
+              console.log('Workflow not found yet');
+              console.log(`But ${runs.data.workflow_runs.length} are running`);
+              runs.data.workflow_runs.forEach((wr) => console.log(wr.inputs?.callback_header));
+
               if (!run) continue;
               status = run.status;
 
