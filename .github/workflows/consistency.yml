@@ -63,17 +63,15 @@ jobs:
           - browser: "safari"
             workflow: "windows-nvda.yml"
     steps:
-      - name: Trigger and wait for workflows
-        uses: convictional/trigger-workflow-and-wait@v1.6.5
+      - name: Trigger and wait for workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.repository }}
-          github_user: ${{ github.repository_owner }}
-          github_token: ${{ secrets.PAT_TOKEN }}
-          workflow_file_name: ${{ matrix.workflow }}
-          wait_interval: 30
-          propagate_failure: false
-          client_payload: |
+          workflow: ${{ matrix.workflow }}
+          token: ${{ secrets.PAT_TOKEN }}
+          wait-for-completion: true
+          wait-for-completion-timeout: 3600 # 1 hour timeout
+          wait-for-completion-interval: 30 # check every 30 seconds
+          inputs: |
             {
               "aria_at_ref": "${{ inputs.aria_at_ref }}",
               "work_dir": "${{ matrix.testPlan }}",
