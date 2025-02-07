@@ -12,7 +12,6 @@ on:
           The version of NVDA to use for testing
         required: false
         type: string
-        default: "latest"
       macos_version:
         description: macOS version to run the tests on
         required: false
