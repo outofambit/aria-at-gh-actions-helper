@@ -61,23 +61,53 @@ jobs:
         range: ${{ fromJSON(needs.define-matrix.outputs.range) }}
         exclude:
           - browser: "safari"
-            workflow: "windows-nvda.yml"
+            workflow: "nvda-test.yml"
     steps:
-      - name: Trigger and wait for workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+      - uses: actions/github-script@v6
         with:
-          workflow: ${{ matrix.workflow }}
-          token: ${{ secrets.PAT_TOKEN }}
-          wait-for-completion: true
-          inputs: |
-            {
-              "aria_at_ref": "${{ inputs.aria_at_ref }}",
-              "work_dir": "${{ matrix.testPlan }}",
-              "browser": "${{ matrix.browser }}",
-              "callback_header": "consistency-test-${{ github.run_id }}",
-              ${{ contains(matrix.workflow, 'nvda') && format('"nvda_version": "{0}",', inputs.nvda_version) || '' }}
-              ${{ contains(matrix.workflow, 'voiceover') && format('"macos_version": "{0}"', inputs.macos_version) || '' }}
-            }
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            const workflow = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: '${{ matrix.workflow }}',
+              ref: 'main',
+              inputs: {
+                aria_at_ref: '${{ inputs.aria_at_ref }}',
+                work_dir: '${{ matrix.testPlan }}',
+                browser: '${{ matrix.browser }}',
+                callback_header: `consistency-test-${context.runId}-${${{ matrix.range }}}`,
+                ...${{ contains(matrix.workflow, 'nvda') }} && {
+                  nvda_version: '${{ inputs.nvda_version }}'
+                },
+                ...${{ contains(matrix.workflow, 'voiceover') }} && {
+                  macos_version: '${{ inputs.macos_version }}'
+                }
+              }
+            });
+
+            // Poll until workflow completes
+            let status;
+            do {
+              await new Promise(r => setTimeout(r, 30000)); // Wait 30 seconds between checks
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: '${{ matrix.workflow }}',
+                event: 'workflow_dispatch'
+              });
+
+              const run = runs.data.workflow_runs.find(r =>
+                r.inputs?.callback_header === `consistency-test-${context.runId}-${${{ matrix.range }}}`
+              );
+
+              if (!run) continue;
+              status = run.status;
+
+              if (run.conclusion && run.conclusion !== 'success') {
+                throw new Error(`Workflow failed with conclusion: ${run.conclusion}`);
+              }
+            } while (status !== 'completed');
   compile-results:
     needs:
       - define-matrix
@@ -88,16 +118,16 @@ jobs:
         id: get-run-ids
         with:
           script: |
-            const callbackHeader = `consistency-test-${context.runId}`;
+            const callbackHeaderPrefix = `consistency-test-${context.runId}`;
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              workflow_id: ['voiceover-test.yml', 'windows-nvda.yml'],
+              workflow_id: ['voiceover-test.yml', 'nvda-test.yml'],
               event: 'workflow_dispatch'
             });
 
             const matchingRuns = runs.data.workflow_runs
-              .filter(run => run.inputs?.callback_header === callbackHeader)
+              .filter(run => run.inputs?.callback_header.startsWith(callbackHeaderPrefix))
               .map(run => run.id);
 
             return matchingRuns;
