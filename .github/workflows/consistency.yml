@@ -47,7 +47,7 @@ jobs:
       - name: Define Workflows
         id: workflows
         run: |
-          echo 'workflows=["voiceover-test.yml", "windows-nvda.yml"]' >> "$GITHUB_OUTPUT"
+          echo 'workflows=["voiceover-test", "nvda-test"]' >> "$GITHUB_OUTPUT"
 
   run-tests:
     needs: define-matrix
