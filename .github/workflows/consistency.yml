@@ -75,7 +75,7 @@ jobs:
                 aria_at_ref: '${{ inputs.aria_at_ref }}',
                 work_dir: '${{ matrix.testPlan }}',
                 browser: '${{ matrix.browser }}',
-                callback_header: `consistency-test:${context.runId}-${${{ matrix.range }}}`,
+                callback_header: `consistency-test:${context.runId}-${{ matrix.range }}`,
                 ...${{ contains(matrix.workflow, 'nvda') }} && {
                   nvda_version: '${{ inputs.nvda_version }}'
                 },
@@ -84,11 +84,15 @@ jobs:
                 }
               }
             });
+            console.log('Dispatched workflow')
 
             // Poll until workflow completes
             let status;
+            let retryAttempted = false;
+
             do {
               await new Promise(r => setTimeout(r, 30000)); // Wait 30 seconds between checks
+              console.log('Polling workflow status...')
               const runs = await github.rest.actions.listWorkflowRuns({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -97,16 +101,30 @@ jobs:
               });
 
               const run = runs.data.workflow_runs.find(r =>
-                r.inputs?.callback_header === `consistency-test:${context.runId}-${${{ matrix.range }}}`
+                r.inputs?.callback_header === `consistency-test:${context.runId}-${{ matrix.range }}`
               );
 
+              console.log('Workflow not found yet')
               if (!run) continue;
               status = run.status;
 
               if (run.conclusion && run.conclusion !== 'success') {
-                throw new Error(`Workflow failed with conclusion: ${run.conclusion}`);
+                console.log('Run failed, retrying one more time.')
+                if (!retryAttempted) {
+                  // Retry the specific failed run once
+                  retryAttempted = true;
+                  await github.rest.actions.reRunWorkflowFailedJobs({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    run_id: run.id
+                  });
+                  status = null; // Reset status to continue polling
+                  continue;
+                }
+                throw new Error(`Workflow failed with conclusion: ${run.conclusion} after retry`);
               }
             } while (status !== 'completed');
+            console.log('Run completed suceessfully.')
   compile-results:
     needs:
       - define-matrix
@@ -129,6 +147,7 @@ jobs:
               .filter(run => run.inputs?.callback_header.startsWith(callbackHeaderPrefix))
               .map(run => run.id);
 
+            console.log(`Found ${matchingRuns} runs`)
             return matchingRuns;
 
       - name: Download artifacts from matching runs
