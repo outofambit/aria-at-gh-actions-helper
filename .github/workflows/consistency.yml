@@ -75,8 +75,9 @@ jobs:
               "work_dir": "${{ matrix.testPlan }}",
               "browser": "${{ matrix.browser }}",
               "callback_header": "consistency-test-${{ github.run_id }}",
-              "nvda_version": "${{ inputs.nvda_version }}",
-              "macos_version": "${{ inputs.macos_version }}"
+              # these have to both be conditional so invalid inputs aren't sent
+              ${{ contains(matrix.workflow, 'nvda') && format('"nvda_version": "{0}",', inputs.nvda_version) || '' }}
+              ${{ contains(matrix.workflow, 'voiceover') && format('"macos_version": "{0}"', inputs.macos_version) || '' }}
             }
   compile-results:
     needs:
